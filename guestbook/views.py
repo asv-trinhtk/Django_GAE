@@ -1,6 +1,6 @@
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, ListView
 
 from google.appengine.api import users
 
@@ -16,8 +16,8 @@ def main_page(request):
     # consistent. If we omitted the ancestor from this query there would be
     # a slight chance that Greeting that had just been written would not
     # show up in a query.
-    # greetings_query = Greeting.query(ancestor=guestbook_key(guestbook_name)).order(-Greeting.date)
-    # greetings = greetings_query.fetch(10)
+    greetings_query = Greeting.query(ancestor=guestbook_key(guestbook_name)).order(-Greeting.date)
+    greetings = greetings_query.fetch(10)
 
     # if users.get_current_user():
     #     url = users.create_logout_url(request.get_full_path())
@@ -30,8 +30,7 @@ def main_page(request):
     url_linktext = 'Login'
 
     template_values = {
-        # 'greetings': greetings,
-        'greetings': [],
+        'greetings': greetings,
         'guestbook_name': guestbook_name,
         'url': url,
         'url_linktext': url_linktext,
@@ -50,3 +49,8 @@ def sign_post(request):
         greeting.put()
         return HttpResponseRedirect('/?' + urllib.urlencode({'guestbook_name': guestbook_name}))
     return HttpResponseRedirect('/')
+
+class MainPage(ListView):
+    template_name = 'main_page.html'
+    context_object_name = 'greetings'
+    model = Greeting
