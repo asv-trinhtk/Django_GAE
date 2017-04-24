@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, ListView
 
 from google.appengine.api import users
@@ -40,6 +40,9 @@ def main_page(request):
 def sign_post(request):
     if request.method == 'POST':
         guestbook_name = request.POST.get('guestbook_name')
+        if guestbook_name is None or guestbook_name == '':
+            guestbook_name = DEFAULT_GUESTBOOK_NAME
+
         greeting = Greeting(parent=guestbook_key(guestbook_name))
 
         # if users.get_current_user():
@@ -51,6 +54,16 @@ def sign_post(request):
     return HttpResponseRedirect('/')
 
 class MainPage(ListView):
-    template_name = 'main_page.html'
+    template_name = 'guestbook/main_page.html'
     context_object_name = 'greetings'
     model = Greeting
+
+    def get_queryset(self):
+        guestbook_name = self.request.GET.get('guestbook_name')
+        if not guestbook_name or guestbook_name == '':
+            guestbook_name = DEFAULT_GUESTBOOK_NAME
+
+        return Greeting.query(ancestor=guestbook_key(guestbook_name)).order(
+            -Greeting.date).fetch(5)
+
+# class SignPost(TemplateView):
