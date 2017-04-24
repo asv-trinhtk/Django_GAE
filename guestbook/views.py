@@ -1,11 +1,12 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
-from django.views.generic import TemplateView
+from django.shortcuts import render, redirect
+from django.views.generic import TemplateView, ListView
 
 from google.appengine.api import users
 
 from guestbook.models import Greeting, guestbook_key, DEFAULT_GUESTBOOK_NAME
 
+import logging
 import urllib
 
 def main_page(request):
@@ -16,8 +17,8 @@ def main_page(request):
     # consistent. If we omitted the ancestor from this query there would be
     # a slight chance that Greeting that had just been written would not
     # show up in a query.
-    # greetings_query = Greeting.query(ancestor=guestbook_key(guestbook_name)).order(-Greeting.date)
-    # greetings = greetings_query.fetch(10)
+    greetings_query = Greeting.query(ancestor=guestbook_key(guestbook_name)).order(-Greeting.date)
+    greetings = greetings_query.fetch(10)
 
     # if users.get_current_user():
     #     url = users.create_logout_url(request.get_full_path())
@@ -30,8 +31,7 @@ def main_page(request):
     url_linktext = 'Login'
 
     template_values = {
-        # 'greetings': greetings,
-        'greetings': [],
+        'greetings': greetings,
         'guestbook_name': guestbook_name,
         'url': url,
         'url_linktext': url_linktext,
@@ -41,6 +41,9 @@ def main_page(request):
 def sign_post(request):
     if request.method == 'POST':
         guestbook_name = request.POST.get('guestbook_name')
+        if guestbook_name is None or guestbook_name == '':
+            guestbook_name = DEFAULT_GUESTBOOK_NAME
+
         greeting = Greeting(parent=guestbook_key(guestbook_name))
 
         # if users.get_current_user():
@@ -50,3 +53,26 @@ def sign_post(request):
         greeting.put()
         return HttpResponseRedirect('/?' + urllib.urlencode({'guestbook_name': guestbook_name}))
     return HttpResponseRedirect('/')
+
+class MainPage(ListView):
+    template_name = 'guestbook/main_page.html'
+    context_object_name = 'greetings'
+    model = Greeting
+
+    def get_guestbook_name(self):
+        guestbook_name = self.request.GET.get('guestbook_name')
+        if not guestbook_name or guestbook_name == '':
+            guestbook_name = DEFAULT_GUESTBOOK_NAME
+        return guestbook_name
+
+    def get_queryset(self):
+        guestbook_name = self.get_guestbook_name()
+        return Greeting.query(ancestor=guestbook_key(guestbook_name)).order(
+            -Greeting.date).fetch(5)
+
+    def get_context_data(self, **kwargs):
+        context = super(MainPage, self).get_context_data(**kwargs)
+        context['url_linktext'] = 'Login'
+        context['guestbook_name'] = self.get_guestbook_name()
+        return context
+

@@ -1,7 +1,8 @@
 from django.conf.urls.defaults import *
-from guestbook.views import main_page, sign_post
+from guestbook.views import MainPage, main_page, sign_post
 
 urlpatterns = patterns('',
-    (r'^sign/$', sign_post),
-    (r'^$', main_page),
+    url(r'^sign/$', sign_post),
+    url(r'^$', MainPage.as_view(), name='index',),
+
 )
