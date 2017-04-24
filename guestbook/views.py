@@ -6,6 +6,7 @@ from google.appengine.api import users
 
 from guestbook.models import Greeting, guestbook_key, DEFAULT_GUESTBOOK_NAME
 
+import logging
 import urllib
 
 def main_page(request):
@@ -58,12 +59,20 @@ class MainPage(ListView):
     context_object_name = 'greetings'
     model = Greeting
 
-    def get_queryset(self):
+    def get_guestbook_name(self):
         guestbook_name = self.request.GET.get('guestbook_name')
         if not guestbook_name or guestbook_name == '':
             guestbook_name = DEFAULT_GUESTBOOK_NAME
+        return guestbook_name
 
+    def get_queryset(self):
+        guestbook_name = self.get_guestbook_name()
         return Greeting.query(ancestor=guestbook_key(guestbook_name)).order(
             -Greeting.date).fetch(5)
 
-# class SignPost(TemplateView):
+    def get_context_data(self, **kwargs):
+        context = super(MainPage, self).get_context_data(**kwargs)
+        context['url_linktext'] = 'Login'
+        context['guestbook_name'] = self.get_guestbook_name()
+        return context
+
