@@ -1,12 +1,8 @@
-from django.http import HttpResponseRedirect
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, FormView, ListView
+from django.views.generic import TemplateView, FormView
 from django.core.urlresolvers import reverse_lazy
-from google.appengine.api import users
 
 from guestbook.models import Greeting, guestbook_key, DEFAULT_GUESTBOOK_NAME
 from guestbook.forms import SignForm
-import logging
 
 class IndexView(TemplateView):
     template_name = 'guestbook/main_page.html'
@@ -78,10 +74,3 @@ class SignView(FormView):
     def form_valid(self, form, **kwargs):
         self.sign_book(form.cleaned_data['guestbook_name'], form.cleaned_data['content'])
         return super(SignView, self).form_valid(form, **kwargs)
-
-    def form_invalid(self, form, **kwargs):
-        return super(SignView, self).form_invalid(form, **kwargs)
-        # return self.render_to_response(self.get_context_data())
-
-    def get_success_url(self, **kwargs):
-        return reverse_lazy('index')
