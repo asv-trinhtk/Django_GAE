@@ -2,7 +2,6 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, FormView, ListView
 from django.core.urlresolvers import reverse_lazy
-
 from google.appengine.api import users
 
 from guestbook.models import Greeting, guestbook_key, DEFAULT_GUESTBOOK_NAME
@@ -36,8 +35,7 @@ class IndexView(TemplateView):
         return self.render_to_response(context)
 
 class SignView(FormView):
-    # template_name = 'guestbook/sign_page.html'
-    template_name = 'guestbook/index.html'
+    template_name = 'guestbook/sign_page.html'
     form_class = SignForm
     success_url = reverse_lazy('index')
 
@@ -47,11 +45,26 @@ class SignView(FormView):
             greeting.content = content
             greeting.put()
 
-    def get(self, request, *args, **kwargs):
+    def get_guestbook_name(self):
+        guestbook_name = self.request.GET.get('guestbook_name', '')
+        return guestbook_name
+
+    def get_initial(self):
+        initial = super(SignView, self).get_initial()
+        initial['guestbook_name'] = self.get_guestbook_name()
+        return initial
+
+    def get_context_data(self, **kwargs):
+        guestbook_name = self.get_guestbook_name()
         form_class = self.get_form_class()
         form = self.get_form(form_class)
-        context = self.get_context_data(**kwargs)
+        context = super(SignView, self).get_context_data(**kwargs)
+        context['guestbook_name'] = guestbook_name
         context['sign_form'] = form
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
 
     def post(self, request, *args, **kwargs):
@@ -63,16 +76,12 @@ class SignView(FormView):
             return self.form_invalid(form)
 
     def form_valid(self, form, **kwargs):
-        logging.info('form_valid')
-        logging.info(form.cleaned_data['name'])
-        self.sign_book(form.cleaned_data['name'], form.cleaned_data['content'])
-        return super(SignView, self).form_valid(form)
+        self.sign_book(form.cleaned_data['guestbook_name'], form.cleaned_data['content'])
+        return super(SignView, self).form_valid(form, **kwargs)
 
     def form_invalid(self, form, **kwargs):
-        # context = self.get_context_data(**kwargs)
-        # context['form'] = form
-        return render(self.request, 'guestbook/sign_error.html')
+        return super(SignView, self).form_invalid(form, **kwargs)
+        # return self.render_to_response(self.get_context_data())
 
     def get_success_url(self, **kwargs):
-        return reverse_lazy('index', kwargs={'guestbook_name': 'new'})
-
+        return reverse_lazy('index')

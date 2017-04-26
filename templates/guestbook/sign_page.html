@@ -1,8 +1,14 @@
-<form action="/sign/" method="post">
-      {% csrf_token %}
-      {{ sign_form }}
-      <!--<input type="hidden" name="guestbook_name" value="{{ guestbook_name }}" />-->
-      <!--<div><textarea name="content" rows="3" cols="60"></textarea></div>-->
-
-      <div><input type="submit" value="Sign Guestbook"></div>
-</form>
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Error</title>
+</head>
+<body>
+	<form action="{% url 'sign' %}?guestbook_name={{ guestbook_name }}" method="post">
+	    {% csrf_token %}
+	    {{ sign_form.as_p }}
+	    <div><input type="submit" value="Sign Guestbook"></div>
+	</form>
+</body>
+</html>
