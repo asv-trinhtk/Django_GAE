@@ -1,7 +1,7 @@
 from django.views.generic import TemplateView, FormView
 from django.core.urlresolvers import reverse_lazy
 
-from guestbook.models import Greeting, guestbook_key, DEFAULT_GUESTBOOK_NAME
+from guestbook.models import Greeting, DEFAULT_GUESTBOOK_NAME
 from guestbook.forms import SignForm
 
 class IndexView(TemplateView):
@@ -16,18 +16,17 @@ class IndexView(TemplateView):
 
     def get_context_data(self, **kwargs):
         guestbook_name = self.get_guestbook_name()
+        urlsafe = self.request.GET.get('urlsafe', '')
         context = super(IndexView, self).get_context_data(**kwargs)
-        context['guestbook_list'] = Greeting.query(ancestor=guestbook_key(guestbook_name)).order(-Greeting.date).fetch(5)
+        context['guestbook_list'], context['urlsafe'], context['more'] = \
+            Greeting.get_greeting_by_page(guestbook_name, urlsafe)
         context['url_linktext'] = 'Login'
         context['guestbook_name'] = guestbook_name
 
         return context
 
     def get(self, request, *args, **kwargs):
-        sign_view = SignForm(self.request.GET or None)
         context = self.get_context_data(**kwargs)
-        context['sign_form'] = sign_view
-
         return self.render_to_response(context)
 
 class SignView(FormView):
@@ -37,9 +36,7 @@ class SignView(FormView):
 
     def sign_book(self, guestbook_name, content):
         if guestbook_name != '':
-            greeting = Greeting(parent=guestbook_key(guestbook_name))
-            greeting.content = content
-            greeting.put()
+            greeting = Greeting.insert_greeting(guestbook_name, content)
 
     def get_guestbook_name(self):
         guestbook_name = self.request.GET.get('guestbook_name', '')
@@ -74,3 +71,7 @@ class SignView(FormView):
     def form_valid(self, form, **kwargs):
         self.sign_book(form.cleaned_data['guestbook_name'], form.cleaned_data['content'])
         return super(SignView, self).form_valid(form, **kwargs)
+
+    def get_success_url(self):
+        url = reverse_lazy('index')
+        return '%s?guestbook_name=%s' % (url, self.get_guestbook_name())
