@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+	<meta charset="UTF-8">
+	<title>Sign Page</title>
+</head>
+<body>
+	<form action="{% url 'sign' %}?guestbook_name={{ guestbook_name }}" method="post">
+	    {% csrf_token %}
+	    {{ sign_form.as_p }}
+	    <div><input type="submit" value="Sign Guestbook"></div>
+	</form>
+</body>
+</html>

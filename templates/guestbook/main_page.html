@@ -1,9 +1,10 @@
+{% load i18n %}
 <html>
   <head>
     <link type="text/css" rel="stylesheet" href="/static/css/main.css" />
   </head>
   <body>
-    {% for greeting in greetings %}
+    {% for greeting in guestbook_list %}
       {% if greeting.author.nickname %}
         <b>{{ greeting.author }}</b> wrote:
       {% else %}
@@ -11,15 +12,14 @@
       {% endif %}
       <blockquote>{{ greeting.content|escape }}</blockquote>
     {% endfor %}
-
-    <form action="/sign/" method="post">
-      {% csrf_token %}
-      <input type="hidden" name="guestbook_name" value="{{ guestbook_name }}" />
-      <div><textarea name="content" rows="3" cols="60"></textarea></div>
-      <div><input type="submit" value="Sign Guestbook"></div>
-    </form>
-
+    {% if guestbook_list|length > 0 %}
+      <a href="{% url 'index' %}?guestbook_name={{ guestbook_name }}">first</a>
+      {% if more %}
+        <a href="{% url 'index' %}?guestbook_name={{ guestbook_name }}&urlsafe={{urlsafe}}">next</a>
+      {% endif %}
+      <br/>
+    {% endif %}
+    <a href="{% url 'sign' %}?guestbook_name={{ guestbook_name }}">Sign GuestBook</a>
     <a href="{{ url }}">{{ url_linktext }}</a>
-
   </body>
 </html>
