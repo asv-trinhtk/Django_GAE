@@ -1,0 +1,6 @@
+queue:
+# FIXME: Not set target for default queue since it may be used by google internal
+- name: default
+#  target: backend
+  rate: 10/s
+  bucket_size: 5

@@ -5,6 +5,8 @@ api_version: 1
 threadsafe: yes
 
 libraries:
+- name: webapp2
+  version: 2.5.2
 - name: django
   version: "latest"
 
@@ -13,7 +15,6 @@ env_variables:
 
 builtins:
 - remote_api: on
-
 
 skip_files:
 - ^(/)?static/css/.*
@@ -29,6 +30,11 @@ handlers:
 
 - url: /css
   static_dir: static/css
+
+# tasks (webapp)
+- url: /task/sendmail.*
+  script: guestbook.send_mail.app
+#  secure: always
 
 - url: .*
   script: main.application
