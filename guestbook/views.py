@@ -5,7 +5,7 @@ from google.appengine.api import users
 from guestbook.models import Greeting, DEFAULT_GUESTBOOK_NAME
 from guestbook.forms import SignForm
 from guestbook.send_mail import add_queue_send_mail
-import logging
+
 
 class IndexView(TemplateView):
 	template_name = 'guestbook/main_page.html'
@@ -23,7 +23,6 @@ class IndexView(TemplateView):
 		context = super(IndexView, self).get_context_data(**kwargs)
 		context['guestbook_list'], context['urlsafe'], context['more'] = \
 			Greeting.get_greeting_by_page(guestbook_name, urlsafe)
-		# context['url_linktext'] = 'Login'
 		context['guestbook_name'] = guestbook_name
 
 		return context
@@ -51,7 +50,7 @@ class SignView(FormView):
 		if guestbook_name != '':
 			user = users.get_current_user()
 			greeting = Greeting.insert_greeting(guestbook_name, user, content)
-			add_queue_send_mail(user, guestbook_name)
+			add_queue_send_mail(user, guestbook_name, greeting.content)
 
 	def get_guestbook_name(self):
 		guestbook_name = self.request.GET.get('guestbook_name', '')
@@ -70,10 +69,6 @@ class SignView(FormView):
 		context['guestbook_name'] = guestbook_name
 		context['sign_form'] = form
 		return context
-
-	def get(self, request, *args, **kwargs):
-		context = self.get_context_data(**kwargs)
-		return self.render_to_response(context)
 
 	def post(self, request, *args, **kwargs):
 		form_class = self.get_form_class()

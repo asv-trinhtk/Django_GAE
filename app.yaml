@@ -14,6 +14,7 @@ env_variables:
   DJANGO_SETTINGS_MODULE: 'settings'
 
 builtins:
+- deferred: on
 - remote_api: on
 
 skip_files:

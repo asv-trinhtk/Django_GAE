@@ -4,3 +4,8 @@ queue:
 #  target: backend
   rate: 10/s
   bucket_size: 5
+
+- name: email
+#  target: backend
+  rate: 10/s
+  bucket_size: 5
